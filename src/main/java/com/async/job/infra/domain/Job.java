@@ -13,5 +13,6 @@ public class Job {
 
     String jobId;
     JobStatus jobStatus;
+    String message;
 
 }

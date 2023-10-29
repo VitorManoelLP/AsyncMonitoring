@@ -1,52 +1,48 @@
 package com.async.job.application;
 
-import com.async.job.infra.enums.JobStatus;
-import com.async.job.infra.exception.JobException;
+import com.async.job.infra.domain.JobEvent;
 import com.async.job.infra.gateway.JobExecutionGateway;
-import com.async.job.infra.interactor.JobProgressInteractor;
+import com.async.job.infra.interactor.JobEventSubjectInteractor;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ThreadUtils;
 
+import java.util.Collection;
 import java.util.concurrent.Executors;
 
 @RequiredArgsConstructor
 public class JobExecutionGatewayImp implements JobExecutionGateway {
 
-    private final JobProgressInteractor jobProgressInteractor;
+    private final JobEventSubjectInteractor eventSubjectInteractor;
 
     @Override
     public void runJob(final String rotina, Runnable run) {
 
         String jobId = String.format("JOB-%s", rotina.toUpperCase());
 
+        final Collection<Thread> allThreads = ThreadUtils.getAllThreads();
+
+        final long sizeThreads = allThreads.stream()
+                .filter(it -> it.getName().startsWith(jobId))
+                .count();
+
+        final String jobIdSequence = jobId.concat("-" + sizeThreads);
+
         Executors.newCachedThreadPool(runnable -> {
-            jobProgressInteractor.saveJob(jobId);
-            return new Thread(runnable, jobId);
-        }).execute(() -> runThread(run, jobId));
+            eventSubjectInteractor.emit(JobEvent.ofNew(jobIdSequence));
+            return new Thread(runnable, jobIdSequence);
+        }).execute(() -> runThread(run, jobIdSequence));
     }
 
     private void runThread(Runnable run, String jobId) {
 
-        boolean occurrenceError = false;
+        String exceptionMessage = null;
 
         try {
-
             run.run();
-
         } catch (Exception exception) {
-
-            occurrenceError = true;
-
-            throw new JobException(exception.getMessage(), exception);
-
+            exceptionMessage = exception.getMessage();
         } finally {
-
-            if (occurrenceError) {
-                jobProgressInteractor.updateJob(JobStatus.FAILED, jobId);
-            } else {
-                jobProgressInteractor.updateJob(JobStatus.COMPLETED, jobId);
-            }
-
+            eventSubjectInteractor.emit(JobEvent.ofPossibilityFailure(jobId, exceptionMessage));
         }
     }
 
@@ -56,7 +52,7 @@ public class JobExecutionGatewayImp implements JobExecutionGateway {
                 .findFirst()
                 .ifPresent(jobThread -> {
                     jobThread.interrupt();
-                    jobProgressInteractor.updateJob(JobStatus.STOPPED, jobId);
+                    eventSubjectInteractor.emit(JobEvent.ofInterrupted(jobId));
                 });
     }
 

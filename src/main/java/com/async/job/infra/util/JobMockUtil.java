@@ -8,10 +8,10 @@ import java.util.concurrent.TimeUnit;
 @UtilityClass
 public class JobMockUtil {
 
-    public void runMockAsyncJob() {
+    public void runMockAsyncJob(final String jobMessage) {
 
         for (int i = 0; i < 100; i++) {
-            System.out.println(i);
+            System.out.println(i + " - " + jobMessage);
             sleep();
         }
 

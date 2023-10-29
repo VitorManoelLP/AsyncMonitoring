@@ -21,7 +21,10 @@ public class JobEntity {
     @Column(name = "JOB_STATUS")
     private JobStatus jobStatus;
 
-    public void attrStatus(JobStatus jobStatus) {
+    private String message;
+
+    public void attrStatus(JobStatus jobStatus, String message) {
         this.jobStatus =  jobStatus;
+        this.message = message;
     }
 }

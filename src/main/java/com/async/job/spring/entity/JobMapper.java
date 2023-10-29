@@ -7,7 +7,7 @@ import lombok.experimental.UtilityClass;
 public class JobMapper {
 
     public Job fromEntity(JobEntity job) {
-        return new Job(job.getJobId(), job.getJobStatus());
+        return new Job(job.getJobId(), job.getJobStatus(), job.getMessage());
     }
 
 }
