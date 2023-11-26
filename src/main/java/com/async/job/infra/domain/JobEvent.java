@@ -38,10 +38,10 @@ public final class JobEvent {
                 .build();
     }
 
-    public static JobEvent ofPossibilityFailure(String jobId, String message) {
+    public static JobEvent ofPossibilityFailure(final JobExecution jobExecution) {
         return JobEvent.builder()
-                .jobId(jobId)
-                .message(message)
+                .jobId(jobExecution.getJobId())
+                .message(jobExecution.getErrorMessage())
                 .build();
     }
 

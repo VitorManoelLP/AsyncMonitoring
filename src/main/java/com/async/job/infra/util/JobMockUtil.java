@@ -17,10 +17,6 @@ public class JobMockUtil {
 
     }
 
-    public void runMockAsyncException() {
-        throw new IllegalArgumentException("Mock async");
-    }
-
     @SneakyThrows
     private static void sleep() {
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
